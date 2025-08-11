@@ -7,77 +7,110 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#4facfe">
 <style>
+    /* Universal Box Model and Font Smoothing */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
     body {
-        font-family: Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         background: linear-gradient(135deg, #74ebd5, #9face6);
         color: #333;
         text-align: center;
         padding: 20px;
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
+    
     h1 {
-        margin-bottom: 20px;
+        margin-bottom: 30px; /* Increased margin for better spacing */
+        font-weight: 600;
     }
+
+    /* Flexbox container for robust alignment */
     .container {
-        background: rgba(255,255,255,0.9);
-        padding: 20px;
+        display: flex;
+        flex-direction: column; /* Stack items vertically */
+        gap: 8px; /* Consistent spacing between form elements */
+        background: rgba(255, 255, 255, 0.95);
+        padding: 25px;
         border-radius: 15px;
         max-width: 400px;
         margin: auto;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        text-align: left; /* Align labels to the left */
     }
+
     label {
-        display: block;
-        margin-top: 15px;
         font-weight: bold;
+        margin-bottom: -4px; /* Slightly reduce space below label */
     }
+
     input {
         width: 100%;
-        padding: 10px;
-        margin-top: 5px;
+        padding: 12px;
         border-radius: 8px;
         border: 1px solid #ccc;
         font-size: 16px;
-        text-align: right;
+        text-align: right; /* Good for numerical input */
+        background-color: #fff;
     }
+    input::placeholder {
+        color: #aaa;
+    }
+
     button {
         margin-top: 20px;
-        padding: 10px 20px;
+        padding: 12px 20px;
         background: #4facfe;
         border: none;
         border-radius: 8px;
         font-size: 18px;
+        font-weight: bold; /* Make text bolder */
         color: white;
         cursor: pointer;
-        transition: background 0.3s;
+        transition: background 0.3s, transform 0.2s;
+        align-self: center; /* Center button within the flex container */
+        width: 100%; /* Make button full width */
     }
     button:hover {
         background: #00c6ff;
+        transform: translateY(-2px); /* Add subtle hover effect */
     }
+
     .result {
-        margin-top: 20px;
+        margin-top: 15px;
         font-size: 18px;
         font-weight: bold;
         background: #e0f7fa;
-        padding: 10px;
+        padding: 12px;
         border-radius: 8px;
+        text-align: center; /* Ensure result text is centered */
+        width: 100%;
     }
+    
+    /* Language Switcher Styles */
     .lang-switcher {
         margin-top: 25px;
     }
     .lang-switcher button {
         background: none;
-        border: 1px solid #fff;
+        border: 1px solid rgba(255, 255, 255, 0.8);
         padding: 5px 10px;
         margin: 0 5px;
         font-size: 14px;
         cursor: pointer;
         border-radius: 5px;
         color: white;
+        width: auto; /* Override full-width for these buttons */
+        align-self: auto;
+        margin-top: 0;
     }
     .lang-switcher button.active {
         background: #fff;
         color: #4facfe;
         font-weight: bold;
+        border-color: #fff;
     }
 </style>
 </head>
