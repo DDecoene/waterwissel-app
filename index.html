@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aquarium Waterwissel Calculator</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4facfe">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #74ebd5, #9face6);
+        color: #333;
+        text-align: center;
+        padding: 20px;
+    }
+    h1 {
+        margin-bottom: 20px;
+    }
+    .container {
+        background: rgba(255,255,255,0.9);
+        padding: 20px;
+        border-radius: 15px;
+        max-width: 400px;
+        margin: auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    label {
+        display: block;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+    input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+        text-align: right;
+    }
+    button {
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #4facfe;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #00c6ff;
+    }
+    .result {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        background: #e0f7fa;
+        padding: 10px;
+        border-radius: 8px;
+    }
+</style>
+</head>
+<body>
+    <h1>Aquarium Waterwissel Calculator</h1>
+    <div class="container">
+        <label for="volume">Aquariuminhoud (liter):</label>
+        <input type="number" id="volume" placeholder="bijv. 200">
+
+        <label for="start">Startwaarde (mg/L):</label>
+        <input type="number" id="start" placeholder="bijv. 40">
+
+        <label for="target">Doelwaarde (mg/L):</label>
+        <input type="number" id="target" placeholder="bijv. 10">
+
+        <button onclick="bereken()">Bereken</button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log("✅ Service Worker geregistreerd"))
+    .catch(err => console.error("❌ Service Worker fout:", err));
+}
+
+function bereken() {
+    const volume = parseFloat(document.getElementById('volume').value);
+    const start = parseFloat(document.getElementById('start').value);
+    const target = parseFloat(document.getElementById('target').value);
+
+    if (isNaN(volume) || isNaN(start) || isNaN(target) || start <= target) {
+        document.getElementById('result').innerHTML = "❌ Controleer je invoer. Start moet groter zijn dan doel.";
+        return;
+    }
+
+    const vervangPercentage = (start - target) / start;
+    const liters = volume * vervangPercentage;
+
+    document.getElementById('result').innerHTML =
+        `💧 Je moet <strong>${liters.toFixed(1)} liter</strong> vervangen (${(vervangPercentage * 100).toFixed(1)}%).`;
+}
+</script>
+</body>
+</html>
