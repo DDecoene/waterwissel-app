@@ -23,37 +23,38 @@
     }
     
     h1 {
-        margin-bottom: 30px; /* Increased margin for better spacing */
+        margin-bottom: 30px;
         font-weight: 600;
     }
 
-    /* Flexbox container for robust alignment */
     .container {
         display: flex;
-        flex-direction: column; /* Stack items vertically */
-        gap: 8px; /* Consistent spacing between form elements */
+        flex-direction: column;
+        gap: 12px;
         background: rgba(255, 255, 255, 0.95);
         padding: 25px;
         border-radius: 15px;
         max-width: 400px;
         margin: auto;
         box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        text-align: left; /* Align labels to the left */
+        text-align: left;
     }
 
     label {
         font-weight: bold;
-        margin-bottom: -4px; /* Slightly reduce space below label */
+        margin-bottom: -4px;
     }
 
-    input {
+    input, select {
         width: 100%;
         padding: 12px;
         border-radius: 8px;
         border: 1px solid #ccc;
         font-size: 16px;
-        text-align: right; /* Good for numerical input */
         background-color: #fff;
+    }
+    input {
+        text-align: right;
     }
     input::placeholder {
         color: #aaa;
@@ -66,16 +67,16 @@
         border: none;
         border-radius: 8px;
         font-size: 18px;
-        font-weight: bold; /* Make text bolder */
+        font-weight: bold;
         color: white;
         cursor: pointer;
         transition: background 0.3s, transform 0.2s;
-        align-self: center; /* Center button within the flex container */
-        width: 100%; /* Make button full width */
+        align-self: center;
+        width: 100%;
     }
     button:hover {
         background: #00c6ff;
-        transform: translateY(-2px); /* Add subtle hover effect */
+        transform: translateY(-2px);
     }
 
     .result {
@@ -85,11 +86,10 @@
         background: #e0f7fa;
         padding: 12px;
         border-radius: 8px;
-        text-align: center; /* Ensure result text is centered */
+        text-align: center;
         width: 100%;
     }
     
-    /* Language Switcher Styles */
     .lang-switcher {
         margin-top: 25px;
     }
@@ -102,7 +102,7 @@
         cursor: pointer;
         border-radius: 5px;
         color: white;
-        width: auto; /* Override full-width for these buttons */
+        width: auto;
         align-self: auto;
         margin-top: 0;
     }
@@ -120,11 +120,20 @@
         <label for="volume" data-key="labelVolume">Aquariuminhoud (liter):</label>
         <input type="number" id="volume" data-key-placeholder="placeholderVolume">
 
-        <label for="start" data-key="labelStart">Startwaarde (mg/L):</label>
-        <input type="number" id="start" data-key-placeholder="placeholderStart">
+        <label for="parameter" data-key="labelParameter">Parameter:</label>
+        <select id="parameter" onchange="updateParameter()">
+            <option value="nitrate">Nitraat (NO₃)</option>
+            <option value="nitrite">Nitriet (NO₂)</option>
+            <option value="phosphate">Fosfaat (PO₄)</option>
+            <option value="gh">Algemene Hardheid (GH)</option>
+            <option value="kh">Carbonaathardheid (KH)</option>
+        </select>
 
-        <label for="target" data-key="labelTarget">Doelwaarde (mg/L):</label>
-        <input type="number" id="target" data-key-placeholder="placeholderTarget">
+        <label for="start" id="startLabel">Startwaarde (mg/L):</label>
+        <input type="number" id="start" placeholder="bijv. 40">
+
+        <label for="target" id="targetLabel">Doelwaarde (mg/L):</label>
+        <input type="number" id="target" placeholder="bijv. 10">
 
         <button onclick="bereken()" data-key="calculateButton">Bereken</button>
 
@@ -144,7 +153,7 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.error("❌ Service Worker error:", err));
 }
 
-// --- Multilanguage & State Logic ---
+// --- Data and Translations ---
 
 const translations = {
     en: {
@@ -152,10 +161,14 @@ const translations = {
         header: "Aquarium Water Change Calculator",
         labelVolume: "Aquarium Volume (liters):",
         placeholderVolume: "e.g. 200",
-        labelStart: "Current Value (mg/L):",
-        placeholderStart: "e.g. 40",
-        labelTarget: "Target Value (mg/L):",
-        placeholderTarget: "e.g. 10",
+        labelParameter: "Parameter:",
+        paramNitrate: "Nitrate (NO₃)",
+        paramNitrite: "Nitrite (NO₂)",
+        paramPhosphate: "Phosphate (PO₄)",
+        paramGH: "General Hardness (GH)",
+        paramKH: "Carbonate Hardness (KH)",
+        labelStart: "Current Value",
+        labelTarget: "Target Value",
         calculateButton: "Calculate",
         errorMsg: "❌ Please check your input. Start value must be greater than target value.",
         resultMsg: (liters, percentage) => `💧 You need to change <strong>${liters} liters</strong> of water (${percentage}%).`
@@ -165,19 +178,32 @@ const translations = {
         header: "Aquarium Waterwissel Calculator",
         labelVolume: "Aquariuminhoud (liter):",
         placeholderVolume: "bijv. 200",
-        labelStart: "Startwaarde (mg/L):",
-        placeholderStart: "bijv. 40",
-        labelTarget: "Doelwaarde (mg/L):",
-        placeholderTarget: "bijv. 10",
+        labelParameter: "Parameter:",
+        paramNitrate: "Nitraat (NO₃)",
+        paramNitrite: "Nitriet (NO₂)",
+        paramPhosphate: "Fosfaat (PO₄)",
+        paramGH: "Algemene Hardheid (GH)",
+        paramKH: "Carbonaathardheid (KH)",
+        labelStart: "Startwaarde",
+        labelTarget: "Doelwaarde",
         calculateButton: "Bereken",
         errorMsg: "❌ Controleer je invoer. Start moet groter zijn dan doel.",
         resultMsg: (liters, percentage) => `💧 Je moet <strong>${liters} liter</strong> vervangen (${percentage}%).`
     }
 };
 
-function setLanguage(lang) {
-    if (!translations[lang]) lang = 'nl'; // Default to Dutch if lang not supported
+const parameterDefaults = {
+    nitrate: { target: 10, unit: "mg/L", placeholderStart: "e.g. 40", placeholderTarget: "e.g. 10" },
+    nitrite: { target: 0, unit: "mg/L", placeholderStart: "e.g. 1", placeholderTarget: "e.g. 0" },
+    phosphate: { target: 0.5, unit: "mg/L", placeholderStart: "e.g. 2", placeholderTarget: "e.g. 0.5" },
+    gh: { target: 6, unit: "°dH", placeholderStart: "e.g. 12", placeholderTarget: "e.g. 6" },
+    kh: { target: 4, unit: "°dH", placeholderStart: "e.g. 8", placeholderTarget: "e.g. 4" }
+};
 
+// --- Core Functions ---
+
+function setLanguage(lang) {
+    if (!translations[lang]) lang = 'nl';
     document.documentElement.lang = lang;
     localStorage.setItem('userLanguage', lang);
 
@@ -191,12 +217,32 @@ function setLanguage(lang) {
         elem.placeholder = translations[lang][key];
     });
 
-    document.querySelectorAll('.lang-switcher button').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    const select = document.getElementById('parameter');
+    select.options[0].text = translations[lang].paramNitrate;
+    select.options[1].text = translations[lang].paramNitrite;
+    select.options[2].text = translations[lang].paramPhosphate;
+    select.options[3].text = translations[lang].paramGH;
+    select.options[4].text = translations[lang].paramKH;
+
+    document.querySelectorAll('.lang-switcher button').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`lang-${lang}`).classList.add('active');
     
+    updateParameter();
     document.getElementById('result').innerHTML = "";
+}
+
+function updateParameter() {
+    const param = document.getElementById('parameter').value;
+    const defaults = parameterDefaults[param];
+    const currentLang = document.documentElement.lang;
+    const t = translations[currentLang];
+
+    document.getElementById('target').value = defaults.target;
+    document.getElementById('start').placeholder = defaults.placeholderStart;
+    document.getElementById('target').placeholder = defaults.placeholderTarget;
+    
+    document.getElementById('startLabel').innerText = `${t.labelStart} (${defaults.unit}):`;
+    document.getElementById('targetLabel').innerText = `${t.labelTarget} (${defaults.unit}):`;
 }
 
 function bereken() {
@@ -208,12 +254,20 @@ function bereken() {
     const currentLang = document.documentElement.lang;
     const t = translations[currentLang];
 
-    if (isNaN(volume) || isNaN(start) || isNaN(target) || start <= target) {
+    if (isNaN(volume) || isNaN(start) || isNaN(target) || start < target) {
         document.getElementById('result').innerHTML = t.errorMsg;
         return;
     }
 
-    // Save the valid volume to localStorage
+    // Special case: if start and target are the same, no water change is needed.
+    if (start === target) {
+        document.getElementById('result').innerHTML = t.resultMsg('0.0', '0.0');
+        return;
+    }
+    
+    // Special case: if start is 0, we can't divide by it. The check above handles this.
+    // The `start < target` check correctly prevents this unless both are 0.
+    
     localStorage.setItem('aquariumVolume', volume);
 
     const vervangPercentage = (start - target) / start;
@@ -222,23 +276,23 @@ function bereken() {
     document.getElementById('result').innerHTML = t.resultMsg(liters.toFixed(1), (vervangPercentage * 100).toFixed(1));
 }
 
-// --- Initialization on Page Load ---
+
+// --- Initialization ---
 
 function initializeApp() {
-    // 1. Set language
     const savedLang = localStorage.getItem('userLanguage');
     const browserLang = navigator.language.split('-')[0];
     const initialLang = (savedLang && translations[savedLang]) ? savedLang : (translations[browserLang] ? browserLang : 'nl');
     setLanguage(initialLang);
 
-    // 2. Load saved volume
     const savedVolume = localStorage.getItem('aquariumVolume');
     if (savedVolume) {
         document.getElementById('volume').value = savedVolume;
     }
+    
+    updateParameter();
 }
 
-// Set language and load data on initial page load
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 </script>
