@@ -1,58 +1,17 @@
 <script>
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths'; // <-- VOEG DEZE IMPORT TOE
 	import { translations } from '$lib/translations.js';
 	import { parameterDefaults } from '$lib/parameters.js';
 
-	let volume = '';
-	let selectedParameter = 'nitrate';
-	let start = '';
-	let target = '';
-	let replacement = '';
-	let resultHTML = '';
-	let currentLang = 'en';
-
+	// ... de rest van je script-sectie blijft precies hetzelfde ...
+	let volume = '', selectedParameter = 'nitrate', start = '', target = '', replacement = '', resultHTML = '', currentLang = 'en';
 	$: t = translations[currentLang] || translations.en;
 	$: paramUnit = parameterDefaults[selectedParameter]?.unit || 'mg/L';
 	$: placeholderStart = parameterDefaults[selectedParameter]?.placeholderStart || '';
-
-	function updateParameter() {
-		const defaults = parameterDefaults[selectedParameter];
-		if (defaults) {
-			target = defaults.target;
-			replacement = defaults.replacement;
-			start = '';
-			resultHTML = '';
-		}
-	}
-
-	function calculate() {
-		const vol = parseFloat(volume);
-		const s = parseFloat(start);
-		const ta = parseFloat(target);
-		const rep = parseFloat(replacement);
-
-		if (isNaN(vol) || isNaN(s) || isNaN(ta) || isNaN(rep)) {
-			resultHTML = t.errorMsgGeneric; return;
-		}
-		if (ta < rep) {
-			resultHTML = t.errorMsgImpossible; return;
-		}
-		if (rep >= s) {
-			resultHTML = s === ta ? t.resultMsg('0.0', '0.0') : t.errorMsgIneffective; return;
-		}
-
-		localStorage.setItem('aquariumVolume', vol);
-		const changeRatio = (s - ta) / (s - rep);
-		const liters = vol * changeRatio;
-		resultHTML = t.resultMsg(liters.toFixed(1), (changeRatio * 100).toFixed(1));
-	}
-
-	onMount(() => {
-		currentLang = localStorage.getItem('userLanguage') || 'en';
-		const savedVolume = localStorage.getItem('aquariumVolume');
-		if (savedVolume) volume = savedVolume;
-		updateParameter();
-	});
+	function updateParameter() { const defaults = parameterDefaults[selectedParameter]; if (defaults) { target = defaults.target; replacement = defaults.replacement; start = ''; resultHTML = ''; } }
+	function calculate() { const vol = parseFloat(volume); const s = parseFloat(start); const ta = parseFloat(target); const rep = parseFloat(replacement); if (isNaN(vol) || isNaN(s) || isNaN(ta) || isNaN(rep)) { resultHTML = t.errorMsgGeneric; return; } if (ta < rep) { resultHTML = t.errorMsgImpossible; return; } if (rep >= s) { resultHTML = s === ta ? t.resultMsg('0.0', '0.0') : t.errorMsgIneffective; return; } localStorage.setItem('aquariumVolume', vol); const changeRatio = (s - ta) / (s - rep); const liters = vol * changeRatio; resultHTML = t.resultMsg(liters.toFixed(1), (changeRatio * 100).toFixed(1)); }
+	onMount(() => { currentLang = localStorage.getItem('userLanguage') || 'en'; const savedVolume = localStorage.getItem('aquariumVolume'); if (savedVolume) volume = savedVolume; updateParameter(); });
 </script>
 
 <svelte:head>
@@ -62,7 +21,8 @@
 <h1>{t.header}</h1>
 
 <div class="nav-link">
-	<a href="/expert">{t.linkExpert}</a>
+    <!-- HIER IS DE FIX -->
+	<a href="{base}/expert">{t.linkExpert}</a>
 </div>
 
 <div class="content-box">
@@ -87,5 +47,3 @@
 		<div class="result-box">{@html resultHTML}</div>
 	{/if}
 </div>
-
-<!-- GEEN <style> TAG MEER HIER -->
