@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-key="titleExpert">Expert Water Change Calculator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4facfe">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Base Styles */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #4ca1af); /* Expert theme */
+            color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+        h1, h2, h3 { font-weight: 600; }
+        a { color: #74ebd5; }
+
+        /* Layout */
+        .page-container { max-width: 600px; margin: 0 auto; }
+        .input-section, .results-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        /* Input Controls */
+        .global-input { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            font-size: 16px;
+            background-color: #333;
+            color: #fff;
+            text-align: right;
+        }
+        
+        /* Mobile-First Parameter Cards */
+        .parameter-card {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .parameter-card h3 { margin: 0 0 10px 0; color: #74ebd5; }
+        .param-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        /* Main Button */
+        #calculate-btn {
+            width: 100%; margin-top: 20px; padding: 15px; background: #4facfe; border: none;
+            border-radius: 8px; font-size: 20px; font-weight: bold; color: white; cursor: pointer;
+            transition: background 0.3s;
+        }
+        #calculate-btn:hover { background: #00c6ff; }
+        
+        /* Results Dashboard */
+        .results-section { display: none; }
+        #summary-recommendation {
+            font-size: 1.5em; font-weight: bold; text-align: center;
+            background: #4facfe; color: white; padding: 15px; border-radius: 10px;
+        }
+        #summary-driver { text-align: center; margin-top: 10px; font-style: italic; }
+        
+        /* Projected Results Table (styled for mobile) */
+        .results-table { margin-top: 20px; width: 100%; border-collapse: collapse; }
+        .results-table th, .results-table td { padding: 10px; text-align: right; border-bottom: 1px solid #555; }
+        .results-table th:first-child, .results-table td:first-child { text-align: left; }
+        .driver-row { background: rgba(79, 172, 254, 0.2); } /* Highlight the governing parameter */
+
+        /* Footer Navigation */
+        .footer-nav { margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="page-container">
+    <h1 data-key="headerExpert">Expert Calculator</h1>
+    <div class="footer-nav">
+        <a href="/" data-key="linkSimple">← Switch to Simple Mode</a>
+    </div>
+
+    <!-- Inputs -->
+    <div class="input-section">
+        <div class="global-input">
+            <label for="volume" data-key="labelVolume">Aquarium Volume (liters)</label>
+            <input type="number" id="volume" placeholder="e.g. 200">
+        </div>
+        <div id="parameter-cards"></div>
+        <button id="calculate-btn" data-key="calculateButton">Calculate Water Change</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="results-section">
+        <div id="summary-recommendation"></div>
+        <p id="summary-driver"></p>
+        <h2 data-key="projectedHeader" style="text-align: center; margin-top: 30px;">Projected Outcome</h2>
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th data-key="colParam">Parameter</th>
+                    <th data-key="colCurrent">Current</th>
+                    <th data-key="colProjected">Projected</th>
+                </tr>
+            </thead>
+            <tbody id="projected-results-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// --- DATA & CONFIG ---
+const translations = {
+    en: {
+        titleExpert: "Expert Water Change Calculator", headerExpert: "Expert Calculator", linkSimple: "← Switch to Simple Mode",
+        labelVolume: "Aquarium Volume (liters)", calculateButton: "Calculate Water Change", projectedHeader: "Projected Outcome",
+        colParam: "Parameter", colCurrent: "Current", colProjected: "Projected",
+        labelCurrent: "Current", labelReplacement: "Replacement", labelTarget: "Target",
+        driverText: (param) => `Based on your <strong>${param}</strong> level to ensure it reaches its target.`,
+        recommendationText: (liters, percent) => `Change <strong>${liters}L</strong> (${percent}%)`
+    },
+    nl: {
+        titleExpert: "Expert Waterwissel Calculator", headerExpert: "Expert Calculator", linkSimple: "← Wissel naar Simpele Modus",
+        labelVolume: "Aquariuminhoud (liter)", calculateButton: "Bereken Waterwissel", projectedHeader: "Voorspelde Uitkomst",
+        colParam: "Parameter", colCurrent: "Huidig", colProjected: "Voorspeld",
+        labelCurrent: "Huidig", labelReplacement: "Verversing", labelTarget: "Doel",
+        driverText: (param) => `Gebaseerd op je <strong>${param}</strong>-waarde om zeker het doel te bereiken.`,
+        recommendationText: (liters, percent) => `Vervang <strong>${liters}L</strong> (${percent}%)`
+    }
+};
+
+let parameters = [
+    { id: 'nitrate', name: 'Nitrate (NO₃)', unit: 'mg/L', replacement: 5, target: 10, current: null },
+    { id: 'nitrite', name: 'Nitrite (NO₂)', unit: 'mg/L', replacement: 0, target: 0, current: null },
+    { id: 'phosphate', name: 'Phosphate (PO₄)', unit: 'mg/L', replacement: 0.1, target: 0.5, current: null },
+    { id: 'gh', name: 'General Hardness (GH)', unit: '°dH', replacement: 8, target: 6, current: null },
+    { id: 'kh', name: 'Carbonate Hardness (KH)', unit: '°dH', replacement: 5, target: 4, current: null }
+];
+
+// --- UI RENDERING ---
+function renderInputs() {
+    const container = document.getElementById('parameter-cards');
+    const t = translations[document.documentElement.lang];
+    container.innerHTML = '';
+    parameters.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'parameter-card';
+        card.innerHTML = `
+            <h3>${p.name}</h3>
+            <div class="param-inputs">
+                <div>
+                    <label for="current-${p.id}">${t.labelCurrent} (${p.unit})</label>
+                    <input type="number" id="current-${p.id}" inputmode="decimal">
+                </div>
+                <div>
+                    <label for="replacement-${p.id}">${t.labelReplacement} (${p.unit})</label>
+                    <input type="number" id="replacement-${p.id}" value="${p.replacement}" inputmode="decimal">
+                </div>
+                 <div>
+                    <label for="target-${p.id}">${t.labelTarget} (${p.unit})</label>
+                    <input type="number" id="target-${p.id}" value="${p.target}" inputmode="decimal">
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// --- CALCULATION LOGIC ---
+function calculate() {
+    const volume = parseFloat(document.getElementById('volume').value);
+    if (isNaN(volume)) { alert("Please enter a valid aquarium volume."); return; }
+    localStorage.setItem('aquariumVolume', volume);
+
+    // 1. Read all inputs into our data structure
+    parameters.forEach(p => {
+        p.current = parseFloat(document.getElementById(`current-${p.id}`).value);
+        p.replacement = parseFloat(document.getElementById(`replacement-${p.id}`).value);
+        p.target = parseFloat(document.getElementById(`target-${p.id}`).value);
+    });
+
+    // 2. Calculate the "governing" water change
+    let masterPercent = 0;
+    let driverParam = null;
+
+    parameters.forEach(p => {
+        if (isNaN(p.current) || p.current <= p.target) return; // Skip if no change is needed or input is empty
+        if (p.current <= p.replacement) return; // Skip if change would be ineffective
+        
+        let changeRatio = (p.current - p.target) / (p.current - p.replacement);
+        if (changeRatio > masterPercent) {
+            masterPercent = changeRatio;
+            driverParam = p;
+        }
+    });
+
+    // 3. Display results
+    displayResults(volume, masterPercent, driverParam);
+}
+
+function displayResults(volume, percent, driver) {
+    const t = translations[document.documentElement.lang];
+    const resultsSection = document.getElementById('results-section');
+    resultsSection.style.display = 'block';
+
+    if (percent <= 0 || !driver) {
+        document.getElementById('summary-recommendation').innerHTML = "No water change needed.";
+        document.getElementById('summary-driver').innerHTML = "";
+        document.getElementById('projected-results-body').innerHTML = "";
+        return;
+    }
+    
+    const litersToChange = (volume * percent).toFixed(1);
+    const percentToChange = (percent * 100).toFixed(1);
+
+    document.getElementById('summary-recommendation').innerHTML = t.recommendationText(litersToChange, percentToChange);
+    document.getElementById('summary-driver').innerHTML = t.driverText(driver.name);
+
+    // 4. Run simulation and populate results table
+    const resultsBody = document.getElementById('projected-results-body');
+    resultsBody.innerHTML = '';
+    parameters.forEach(p => {
+        let projected = p.current;
+        if (!isNaN(p.current)) {
+            projected = p.current - (percent * (p.current - p.replacement));
+        }
+
+        const row = document.createElement('tr');
+        if (p.id === driver.id) {
+            row.className = 'driver-row';
+        }
+        row.innerHTML = `
+            <td>${p.name}</td>
+            <td>${p.current !== null && !isNaN(p.current) ? p.current.toFixed(1) : 'N/A'} ${p.unit}</td>
+            <td><strong>${projected !== null && !isNaN(projected) ? projected.toFixed(1) : 'N/A'} ${p.unit}</strong></td>
+        `;
+        resultsBody.appendChild(row);
+    });
+    
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// --- INITIALIZATION ---
+function initializeApp() {
+    const lang = localStorage.getItem('userLanguage') || 'en';
+    document.documentElement.lang = lang;
+    Object.keys(translations.en).forEach(key => {
+        const elem = document.querySelector(`[data-key="${key}"]`);
+        if (elem) elem.innerHTML = translations[lang][key];
+    });
+
+    const savedVolume = localStorage.getItem('aquariumVolume');
+    if (savedVolume) document.getElementById('volume').value = savedVolume;
+    
+    renderInputs();
+    document.getElementById('calculate-btn').onclick = calculate;
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
+</script>
+
+</body>
+</html>
