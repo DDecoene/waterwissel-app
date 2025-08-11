@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Draai deze workflow elke keer als er een push naar de 'main' branch is
+  push:
+    branches:
+      - main
+  # Maakt het ook mogelijk om de workflow handmatig te starten vanaf de Actions-pagina
+  workflow_dispatch:
+
+# Sta deze job toe om te schrijven naar de gh-pages branch
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout je code
+        uses: actions/checkout@v4
+
+      - name: Installeer pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8 # Gebruik de pnpm-versie die je lokaal ook gebruikt
+
+      - name: Installeer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Gebruik een recente LTS-versie van Node
+          cache: 'pnpm'
+
+      - name: Installeer de dependencies
+        run: pnpm install
+
+      - name: Bouw de SvelteKit app
+        run: pnpm build
+
+      - name: Upload de build-artefacten
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy naar GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
