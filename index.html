@@ -88,6 +88,7 @@
         border-radius: 8px;
         text-align: center;
         width: 100%;
+        line-height: 1.5; /* Improve readability for multi-line messages */
     }
     
     .lang-switcher {
@@ -134,6 +135,9 @@
 
         <label for="target" id="targetLabel">Doelwaarde (mg/L):</label>
         <input type="number" id="target" placeholder="bijv. 10">
+        
+        <label for="replacement" id="replacementLabel">Waarde in verversingswater (mg/L):</label>
+        <input type="number" id="replacement" placeholder="bijv. 5">
 
         <button onclick="bereken()" data-key="calculateButton">Bereken</button>
 
@@ -169,8 +173,11 @@ const translations = {
         paramKH: "Carbonate Hardness (KH)",
         labelStart: "Current Value",
         labelTarget: "Target Value",
+        labelReplacement: "Replacement Water Value",
         calculateButton: "Calculate",
-        errorMsg: "❌ Please check your input. Start value must be greater than target value.",
+        errorMsgGeneric: "❌ Please check all inputs.",
+        errorMsgImpossible: "❌ Target is unachievable. Target value must be higher than replacement water value.",
+        errorMsgIneffective: "❌ Water change is ineffective. Replacement water value is higher than or equal to current value.",
         resultMsg: (liters, percentage) => `💧 You need to change <strong>${liters} liters</strong> of water (${percentage}%).`
     },
     nl: {
@@ -186,18 +193,21 @@ const translations = {
         paramKH: "Carbonaathardheid (KH)",
         labelStart: "Startwaarde",
         labelTarget: "Doelwaarde",
+        labelReplacement: "Waarde in verversingswater",
         calculateButton: "Bereken",
-        errorMsg: "❌ Controleer je invoer. Start moet groter zijn dan doel.",
+        errorMsgGeneric: "❌ Controleer alle invoer.",
+        errorMsgImpossible: "❌ Doel is onbereikbaar. Doelwaarde moet hoger zijn dan de waarde van het verversingswater.",
+        errorMsgIneffective: "❌ Waterwissel is niet effectief. Waarde van verversingswater is hoger dan of gelijk aan de startwaarde.",
         resultMsg: (liters, percentage) => `💧 Je moet <strong>${liters} liter</strong> vervangen (${percentage}%).`
     }
 };
 
 const parameterDefaults = {
-    nitrate: { target: 10, unit: "mg/L", placeholderStart: "e.g. 40", placeholderTarget: "e.g. 10" },
-    nitrite: { target: 0, unit: "mg/L", placeholderStart: "e.g. 1", placeholderTarget: "e.g. 0" },
-    phosphate: { target: 0.5, unit: "mg/L", placeholderStart: "e.g. 2", placeholderTarget: "e.g. 0.5" },
-    gh: { target: 6, unit: "°dH", placeholderStart: "e.g. 12", placeholderTarget: "e.g. 6" },
-    kh: { target: 4, unit: "°dH", placeholderStart: "e.g. 8", placeholderTarget: "e.g. 4" }
+    nitrate:   { target: 10,  replacement: 5,   unit: "mg/L", placeholderStart: "e.g. 40" },
+    nitrite:   { target: 0,   replacement: 0,   unit: "mg/L", placeholderStart: "e.g. 1" },
+    phosphate: { target: 0.5, replacement: 0.1, unit: "mg/L", placeholderStart: "e.g. 2" },
+    gh:        { target: 6,   replacement: 8,   unit: "°dH",  placeholderStart: "e.g. 12" },
+    kh:        { target: 4,   replacement: 5,   unit: "°dH",  placeholderStart: "e.g. 8" }
 };
 
 // --- Core Functions ---
@@ -238,42 +248,51 @@ function updateParameter() {
     const t = translations[currentLang];
 
     document.getElementById('target').value = defaults.target;
+    document.getElementById('replacement').value = defaults.replacement;
     document.getElementById('start').placeholder = defaults.placeholderStart;
-    document.getElementById('target').placeholder = defaults.placeholderTarget;
     
     document.getElementById('startLabel').innerText = `${t.labelStart} (${defaults.unit}):`;
     document.getElementById('targetLabel').innerText = `${t.labelTarget} (${defaults.unit}):`;
+    document.getElementById('replacementLabel').innerText = `${t.labelReplacement} (${defaults.unit}):`;
 }
 
 function bereken() {
-    const volumeInput = document.getElementById('volume');
-    const volume = parseFloat(volumeInput.value);
+    const volume = parseFloat(document.getElementById('volume').value);
     const start = parseFloat(document.getElementById('start').value);
     const target = parseFloat(document.getElementById('target').value);
+    const replacement = parseFloat(document.getElementById('replacement').value);
     
     const currentLang = document.documentElement.lang;
     const t = translations[currentLang];
+    const resultDiv = document.getElementById('result');
 
-    if (isNaN(volume) || isNaN(start) || isNaN(target) || start < target) {
-        document.getElementById('result').innerHTML = t.errorMsg;
-        return;
-    }
-
-    // Special case: if start and target are the same, no water change is needed.
-    if (start === target) {
-        document.getElementById('result').innerHTML = t.resultMsg('0.0', '0.0');
+    if (isNaN(volume) || isNaN(start) || isNaN(target) || isNaN(replacement)) {
+        resultDiv.innerHTML = t.errorMsgGeneric;
         return;
     }
     
-    // Special case: if start is 0, we can't divide by it. The check above handles this.
-    // The `start < target` check correctly prevents this unless both are 0.
-    
+    if (target < replacement) {
+        resultDiv.innerHTML = t.errorMsgImpossible;
+        return;
+    }
+
+    if (replacement >= start) {
+        // If start and target are the same, no change is needed, otherwise it's ineffective.
+        if (start === target) {
+             resultDiv.innerHTML = t.resultMsg('0.0', '0.0');
+        } else {
+            resultDiv.innerHTML = t.errorMsgIneffective;
+        }
+        return;
+    }
+
     localStorage.setItem('aquariumVolume', volume);
+    
+    // Formula: (Start - Target) / (Start - Replacement)
+    const changeRatio = (start - target) / (start - replacement);
+    const liters = volume * changeRatio;
 
-    const vervangPercentage = (start - target) / start;
-    const liters = volume * vervangPercentage;
-
-    document.getElementById('result').innerHTML = t.resultMsg(liters.toFixed(1), (vervangPercentage * 100).toFixed(1));
+    resultDiv.innerHTML = t.resultMsg(liters.toFixed(1), (changeRatio * 100).toFixed(1));
 }
 
 
