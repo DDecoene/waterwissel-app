@@ -3,11 +3,16 @@
   <head>
     <meta charset="utf-8" />
 
-    <!-- Gebruik een relatief pad, dit werkt het beste met de static adapter -->
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" href="/icon-192.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- 
+      HIER IS DE FIX:
+      We gebruiken %sveltekit.assets% in plaats van een hardgecodeerd pad.
+      SvelteKit zal dit tijdens het build-proces automatisch vervangen 
+      door de correcte base path (bv. /waterwissel-app).
+    -->
+    <link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="any" />
+    <link rel="icon" href="%sveltekit.assets%/icon-192.png" type="image/png" />
+    <link rel="apple-touch-icon" href="%sveltekit.assets%/apple-touch-icon.png" />
+    <link rel="manifest" href="%sveltekit.assets%/site.webmanifest" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
