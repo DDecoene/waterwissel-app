@@ -16,9 +16,12 @@ export const translations = {
         placeholderVolume: "e.g. 200", 
         labelParameter: "Parameter:",
         labelStart: "Current Value",
-        labelCurrent: "Current Value",
         labelTarget: "Target Value", 
-        labelReplacement: "Replacement Water Value", 
+        labelReplacement: "Replacement Water Value",
+        // NIEUWE, KORTERE LABELS VOOR EXPERT MODE
+        labelCurrentExpert: "Current Value",
+        labelReplacementExpert: "Replacement",
+        labelTargetExpert: "Target",
         
         // Parameters
         paramNitrate: "Nitrate (NO₃)", 
@@ -38,7 +41,7 @@ export const translations = {
         resultMsg: (liters, percentage) => `💧 You need to change <strong>${liters} liters</strong> of water (${percentage}%).`,
         
         // Expert mode specific
-        recommendationText: (liters, percentage) => `💧 Recommended water change: <strong>${liters} liters</strong> (${percentage}%)`,
+        recommendationText: (liters, percentage) => `💧 Recommended: <strong>${liters} liters</strong> (${percentage}%)`,
         driverText: (paramName) => `<em>Driving parameter: ${paramName}</em>`,
         projectedHeader: "Projected Values After Water Change",
         colParam: "Parameter",
@@ -61,10 +64,13 @@ export const translations = {
         placeholderVolume: "bijv. 200", 
         labelParameter: "Parameter:",
         labelStart: "Startwaarde",
-        labelCurrent: "Huidige Waarde",
         labelTarget: "Doelwaarde", 
-        labelReplacement: "Waarde in verversingswater", 
-        
+        labelReplacement: "Waarde in verversingswater",
+        // NIEUWE, KORTERE LABELS VOOR EXPERT MODE
+        labelCurrentExpert: "Huidige Waarde",
+        labelReplacementExpert: "Verversing",
+        labelTargetExpert: "Doel",
+
         // Parameters
         paramNitrate: "Nitraat (NO₃)", 
         paramNitrite: "Nitriet (NO₂)", 
@@ -83,7 +89,7 @@ export const translations = {
         resultMsg: (liters, percentage) => `💧 Je moet <strong>${liters} liter</strong> vervangen (${percentage}%).`,
         
         // Expert mode specific
-        recommendationText: (liters, percentage) => `💧 Aanbevolen waterwissel: <strong>${liters} liter</strong> (${percentage}%)`,
+        recommendationText: (liters, percentage) => `💧 Aanbevolen: <strong>${liters} liter</strong> (${percentage}%)`,
         driverText: (paramName) => `<em>Bepalende parameter: ${paramName}</em>`,
         projectedHeader: "Verwachte Waarden Na Waterwissel",
         colParam: "Parameter",
