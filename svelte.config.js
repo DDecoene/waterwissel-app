@@ -12,7 +12,6 @@ const config = {
       precompress: false,
       strict: true
     }),
-    // VOEG DEZE SECTIE TOE
     paths: {
       base: process.env.NODE_ENV === 'production' ? '/waterwissel-app' : '',
     }

@@ -1,10 +1,11 @@
 <script>
-	import '$lib/styles/global.css'; // Deze import is BELANGRIJK
+	import '$lib/styles/global.css';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { translations } from '$lib/utils';
 	import { currentLang } from '$lib/stores';
+	import { base } from '$app/paths'; // <-- FIX: Import the base path
 
 	let modalVisible = false;
 	let readmeContent = 'Loading...';
@@ -18,7 +19,8 @@
 
 	function showAboutModal() {
 		modalVisible = true;
-		fetch('/README.md')
+		// FIX: Use the base path for the fetch URL
+		fetch(`${base}/README.md`)
 			.then((response) => (response.ok ? response.text() : 'Error: README.md not found.'))
 			.then((text) => {
 				readmeContent = marked.parse(text);
@@ -27,8 +29,9 @@
 
 	onMount(() => {
 		if (browser && 'serviceWorker' in navigator) {
+			// FIX: Use the base path for the service worker registration
 			navigator.serviceWorker
-				.register('/service-worker.js')
+				.register(`${base}/service-worker.js`)
 				.then(() => console.log('Service Worker Geregistreerd'))
 				.catch((err) => console.error('Service Worker Registratie Mislukt:', err));
 		}
@@ -38,7 +41,6 @@
 	});
 </script>
 
-<!-- De class 'expert-mode' is hier verwijderd -->
 <div class="page-wrapper">
 	<slot />
 
