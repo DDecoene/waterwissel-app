@@ -1,47 +1,55 @@
-# .github/workflows/deploy.yml
-
-name: Build and Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
-  # This workflow runs only when a new tag is pushed
   push:
     tags:
-      - 'v*' # This pattern matches tags like v1.0, v1.2.3, v2.0.0-beta
+      - 'v*' # Matches tags like v1.0, v1.2.3, etc.
+      
+  # Maakt het ook mogelijk om de workflow handmatig te starten vanaf de Actions-pagina
+  workflow_dispatch:
+
+# Sta deze job toe om te schrijven naar de gh-pages branch
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout je code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Using a recent LTS version of Node.js
-
-      - name: Set up pnpm
+      - name: Installeer pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8 # Or your preferred pnpm version
+          version: 8 # Gebruik de pnpm-versie die je lokaal ook gebruikt
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build the application
-        # Your svelte.config.js uses process.env.NODE_ENV to set the base path.
-        # We must set it to 'production' here for the build to have the correct paths.
-        run: pnpm build
-        env:
-          NODE_ENV: production
-
-      - name: Deploy to GitHub Pages
-        # This popular action handles all the steps of pushing your build
-        # output to the 'gh-pages' branch for you.
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Installeer Node.js
+        uses: actions/setup-node@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # The output directory from your build process.
-          # Your svelte.config.js specifies 'build'.
-          publish_dir: ./build
+          node-version: '20' # Gebruik een recente LTS-versie van Node
+          cache: 'pnpm'
+
+      - name: Installeer de dependencies
+        run: pnpm install
+
+      - name: Bouw de SvelteKit app
+        run: pnpm build
+
+      - name: Upload de build-artefacten
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy naar GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
