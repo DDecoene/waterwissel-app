@@ -7,6 +7,8 @@ This tool is designed for modern aquarists who want precision. It goes beyond si
 ## ✨ Features
 
 *   **Accurate Calculation**: Uses a formula that includes the parameter value of your replacement water for precise results.
+*   **Expert Mode**: Calculate the required water change based on multiple parameters simultaneously. The app determines which parameter is the "driver" for the change.
+*   **Calculation Logbook**: Save your expert mode calculations, including all projected values, to a logbook in your browser to track your aquarium's history.
 *   **Multiple Parameters**: Supports common aquarium parameters like Nitrate (NO₃), Nitrite (NO₂), Phosphate (PO₄), GH, and KH.
 *   **Smart Defaults**: Provides sensible target values for each parameter, which you can easily override.
 *   **Multilingual**: Supports English and Dutch, automatically detecting your browser's language.

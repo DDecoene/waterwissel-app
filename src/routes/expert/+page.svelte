@@ -1,20 +1,20 @@
 <script>
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
-	import { translations } from '$lib/translations.js';
-	import { currentLang } from '$lib/store.js'; // <-- LEES UIT DE STORE
+	import { translations, parameterDefaults } from '$lib/utils';
+	import { currentLang, logbook } from '$lib/stores';
 
-	let volume = '';
-	let results = null;
+	let volume = '', results = null;
 
-	let parameters = [
-		{ id: 'nitrate', name: 'Nitrate (NO₃)', unit: 'mg/L', replacement: 5, target: 10, current: '' },
-		{ id: 'nitrite', name: 'Nitrite (NO₂)', unit: 'mg/L', replacement: 0, target: 0, current: '' },
-		{ id: 'phosphate', name: 'Phosphate (PO₄)', unit: 'mg/L', replacement: 0.1, target: 0.5, current: '' },
-		{ id: 'gh', name: 'General Hardness (GH)', unit: '°dH', replacement: 8, target: 6, current: '' },
-		{ id: 'kh', name: 'Carbonate Hardness (KH)', unit: '°dH', replacement: 5, target: 4, current: '' }
-	];
-	
+	// --- DIT IS DE CORRECTE AANPAK ---
+	// We importeren de 'parameterDefaults' en bouwen onze lokale 'parameters' array dynamisch op.
+	// Nu is er maar één bron van waarheid voor alle parameter-data.
+	let parameters = Object.entries(parameterDefaults).map(([id, defaults]) => ({
+		id: id,
+		...defaults,
+		current: '' // Voeg de 'current' eigenschap toe voor de input binding
+	}));
+
 	$: t = translations[$currentLang] || translations.en;
 
 	onMount(() => {
@@ -25,17 +25,13 @@
 	function calculate() {
 		const vol = parseFloat(volume);
 		if (isNaN(vol) || vol <= 0) {
-			alert('Please enter a valid aquarium volume.'); return;
+			alert('Please enter a valid aquarium volume.');
+			return;
 		}
 		localStorage.setItem('aquariumVolume', vol);
-
-		let masterPercent = 0;
-		let driverParam = null;
-
+		let masterPercent = 0, driverParam = null;
 		parameters.forEach(p => {
-			const current = parseFloat(p.current);
-			const target = parseFloat(p.target);
-			const replacement = parseFloat(p.replacement);
+			const current = parseFloat(p.current), target = parseFloat(p.target), replacement = parseFloat(p.replacement);
 			if (isNaN(current) || current <= target || current <= replacement) return;
 			const changeRatio = (current - target) / (current - replacement);
 			if (changeRatio > masterPercent) {
@@ -43,7 +39,6 @@
 				driverParam = p;
 			}
 		});
-		
 		const projectedResults = parameters.map(p => {
 			const current = parseFloat(p.current);
 			let projectedValue = current;
@@ -53,26 +48,27 @@
 			}
 			return { ...p, projectedValue };
 		});
-		
-		results = {
-			liters: (vol * masterPercent).toFixed(1),
-			percent: (masterPercent * 100).toFixed(1),
-			driver: driverParam,
-			projections: projectedResults
-		};
+		results = { liters: (vol * masterPercent).toFixed(1), percent: (masterPercent * 100).toFixed(1), driver: driverParam, projections: projectedResults };
 	}
+
+    function saveToLogbook() {
+        if (!results) return;
+        const logEntry = { timestamp: Date.now(), volume: parseFloat(volume), results: results };
+        logbook.add(logEntry);
+        alert('Entry saved to logbook!');
+    }
 </script>
 
-<svelte:head>
-	<title>{t.titleExpert || 'Expert Water Change Calculator'}</title>
-</svelte:head>
+<svelte:head> <title>{t.titleExpert}</title> </svelte:head>
 
 <h1>{t.headerExpert}</h1>
-<div class="nav-link">
+<div class="nav-link-group">
 	<a href="{base}/">{t.linkSimple}</a>
+    <span>&bull;</span>
+	<a href="{base}/logboek">{t.linkLogbook}</a>
 </div>
 
-<div class="content-box">
+<div class="expert-content-box">
 	<div class="global-input">
 		<label for="volume">{t.labelVolume}</label>
 		<input type="number" id="volume" placeholder={t.placeholderVolume} bind:value={volume}>
@@ -80,7 +76,7 @@
 
 	{#each parameters as param (param.id)}
 		<div class="parameter-card">
-			<h3>{param.name} ({param.unit})</h3>
+			<h3>{t[param.translationKey]} ({param.unit})</h3>
 			<div class="input-group">
 				<label for="current-{param.id}">{t.labelCurrentExpert}</label>
 				<input type="number" id="current-{param.id}" inputmode="decimal" bind:value={param.current}>
@@ -97,31 +93,25 @@
 			</div>
 		</div>
 	{/each}
-
-	<button class="action-button" on:click={calculate}>{t.calculateButton}</button>
+	<button on:click={calculate}>{t.calculateButton}</button>
 </div>
 
 {#if results}
-	<div class="content-box">
+	<div class="expert-content-box">
 		{#if results.percent > 0 && results.driver}
 			<div class="result-box">{@html t.recommendationText(results.liters, results.percent)}</div>
-			<p id="summary-driver">{@html t.driverText(results.driver.name)}</p>
+			<p id="summary-driver">{@html t.driverText(t[results.driver.translationKey])}</p>
 		{:else}
 			<div class="result-box">No water change needed.</div>
 		{/if}
+        <button class="save-button" on:click={saveToLogbook}>{t.saveLogButton}</button>
 		<h2>{t.projectedHeader}</h2>
 		<table class="results-table">
-			<thead>
-				<tr>
-					<th>{t.colParam}</th>
-					<th>{t.colCurrent}</th>
-					<th>{t.colProjected}</th>
-				</tr>
-			</thead>
+			<thead><tr><th>{t.colParam}</th><th>{t.colCurrent}</th><th>{t.colProjected}</th></tr></thead>
 			<tbody>
 				{#each results.projections as p (p.id)}
 					<tr class:driver-row={results.driver && p.id === results.driver.id}>
-						<td>{p.name}</td>
+						<td>{t[p.translationKey]}</td>
 						<td>{p.current || 'N/A'}</td>
 						<td><strong>{isNaN(p.projectedValue) ? 'N/A' : p.projectedValue.toFixed(2)}</strong></td>
 					</tr>
