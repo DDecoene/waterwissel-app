@@ -2,7 +2,7 @@
 
 A smart, progressive web app (PWA) to accurately calculate the amount of water to change in your aquarium to reach a specific parameter target.
 
-This tool is designed for modern aquarists who want precision. It offers a simple mode for quick single-parameter calculations and an expert mode for balancing multiple parameters at once, complete with a persistent logbook.
+This tool is designed for modern aquararists who want precision. It offers a simple mode for quick single-parameter calculations and an expert mode for balancing multiple parameters at once, complete with a persistent logbook.
 
 ## ✨ Features
 
@@ -66,5 +66,31 @@ The amount of water to change in liters is then:
 
 In Expert Mode, this calculation is performed for all parameters, and the highest `Change %` is used for the final recommendation.
 
+## 💡 Smart Defaults & The 'Why'
+
+The calculator comes pre-filled with sensible default values. Here’s a brief explanation of why these targets were chosen, based on general best practices for a healthy freshwater planted aquarium.
+
+*   **Nitrate (NO₃)**
+    *   **Default Target: 10 mg/L**. Nitrate is a key nutrient for plant growth but can cause stress to fish at very high levels (above 40-50 mg/L). A target of 10 mg/L is a safe middle ground that nourishes plants without harming fish and helps keep algae in check. [1, 5]
+
+*   **Nitrite (NO₂)**
+    *   **Default Target: 0 mg/L**. Nitrite is highly toxic to fish as it interferes with their ability to breathe. The only safe level for nitrite is zero. A reading above zero indicates that the aquarium's nitrogen cycle is not fully established or has been disrupted. [1, 3]
+
+*   **Phosphate (PO₄)**
+    *   **Default Target: 0.5 mg/L**. Phosphate is another essential nutrient for plants, but it's also a primary driver of algae growth, especially "green spot" algae. The target of 0.5 mg/L provides sufficient phosphate for healthy plant growth while being low enough to discourage major algae blooms. [5]
+
+*   **General Hardness (GH)**
+    *   **Default Target: 6 °dH**. GH measures the amount of calcium and magnesium in the water, which are vital for the health of fish and plants. A level of 4-8 °dH is a versatile target suitable for a wide variety of common community fish and plant species. [4]
+
+*   **Carbonate Hardness (KH)**
+    *   **Default Target: 4 °dH**. KH, or alkalinity, is crucial for keeping the pH stable and preventing sudden, dangerous swings. A target of 4-8 °dKH provides a solid buffer against pH crashes, creating a stable environment for your aquarium's inhabitants. [1, 4]
+
 ---
 *Developed with assistance from AI.*
+
+## References
+1. [Ideal Water Parameters - Tank Aquariums](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQF8HbIdJaOpomfNQ1144gn7k0osf0HGOiGcPFfW-Kh-LCkh87xAykL2f0JOqOIygKOVuAgzmg2iWxkt1BDffnTg2i5q_tOLFDkG7Uy5-i2B6wXPSn5_V12JBDG0pxURhTOcu1bB-_FEni04-jh42eFKttpIJ49Cvwekdl_sHoHXezDJ4Q==)
+2. [WATER PARAMETERS Masterclass 2024 - Green Aqua](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHGUHlLV7C9yHziUDaqFA7aPe_WD6Xa6VQgDK-r-lY2gJtb2wB5jhFYd24LVM3KOlggrRc0JAlB1SkuIJLPgd8UwJn5QqfG_MRcUxJqcAm8L6TthoO9Qn54D4CiekJ5PoN0fhJrNVc=)
+3. [Proper Water Parameters for Home Aquariums - LiveAquaria](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFdrjioxHglnLCgPIab8NRz1U4NpBxb7rQuK-Z00XpTtv1-kRwKBtc5ION5F0k31C-e82lLkc2_-XQPvnd9w_BdaPYgCj_534LeRVtzHweqIjGosisd9nX4Id-XshmL89xQDAE7lzstn2s=)
+4. [The Fish Keeper's Guide to pH, GH, and KH - Aquarium Co-Op](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQFCWAf_0wIOddfSm-NrsnfbTbu1B2OPXMvQQADx2gEf3gmPdlkZe73xL2ahiyk1FAzcxdqbCHtaazNbq0qEACqlhd7MavTUNjYoP6Rn4N8kifYejX8ihFQfx92INXyY5mQ3LQw8Y-DO0PyOUyZh7HU=)
+5. [Controlling and measuring Macro nutrients in the planted aquarium. - Freshwater Aquarium Plants](https://vertexaisearch.cloud.google.com/grounding-api-redirect/AUZIYQHJ2AsAYOwp-_N71cUSEcQSTpyJQOXjWkPLvNI5i5llTKj9bXMD0iZZXqIz7rbEhEmRWcQ7EGbi9cgzbI8l6etvbKeWMJ9A0H5HaFOQK3x2p724Fu1Z7O1-YYzN-q9jRozP8oGwYSBQFjoSMhPmTO4ztQ==)
